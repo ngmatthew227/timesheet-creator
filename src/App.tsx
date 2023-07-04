@@ -11,12 +11,13 @@ import GenerateConfigCard from "./GenerateConfigCard";
 import LeaveDaysGrid from "./LeaveDaysGrid";
 import StaffCalendar from "./StaffCalendar";
 import StaffDetailCard from "./StaffDetailCard";
-import { OfficerState, StaffState, useConfigStore } from "./store/configStore";
+import { LeaveDaysState, OfficerState, StaffState, useConfigStore } from "./store/configStore";
 
 function App() {
   const [open, setOpen] = useState(false);
   const staffData = useConfigStore((state: StaffState) => state.staffData);
   const officerData = useConfigStore((state: OfficerState) => state.officerData);
+  const leaveDays = useConfigStore((state: LeaveDaysState) => state.leaveDays);
 
   const OutterContainer = styled.div`
     height: 100vh;
@@ -61,28 +62,51 @@ function App() {
 
   const onGenerate = async (startDate: Dayjs, remarks: string) => {
     const workbook = await getWorkbook();
-    const worksheet = workbook.getWorksheet(1);
-    worksheet.getCell("D9").value = startDate.add(8, "hour").toDate();
-    worksheet.getCell("D9").numFmt = "dd-mmm-yyyy";
-    worksheet.getCell("E60").value = remarks;
+    const mainTimesheet = workbook.getWorksheet(1);
+    mainTimesheet.getCell("D9").value = startDate.add(8, "hour").toDate();
+    mainTimesheet.getCell("D9").numFmt = "dd-mmm-yyyy";
+    mainTimesheet.getCell("E60").value = remarks;
 
     // set staff data
-    worksheet.getCell("D5").value = staffData.staffName;
-    worksheet.getCell("D6").value = staffData.contractorName;
-    worksheet.getCell("D7").value = staffData.staffCategory;
-    worksheet.getCell("D8").value = staffData.department;
-    worksheet.getCell("L8").value = staffData.postUnit;
+    mainTimesheet.getCell("D5").value = staffData.staffName;
+    mainTimesheet.getCell("D6").value = staffData.contractorName;
+    mainTimesheet.getCell("D7").value = staffData.staffCategory;
+    mainTimesheet.getCell("D8").value = staffData.department;
+    mainTimesheet.getCell("L8").value = staffData.postUnit;
 
     // set officer data
-    worksheet.getCell("E12").value = officerData.officerName;
-    worksheet.getCell("E13").value = officerData.postTitle;
-    worksheet.getCell("K13").value = officerData.email;
-    worksheet.getCell("E14").value = officerData.commitmentRef;
+    mainTimesheet.getCell("E12").value = officerData.officerName;
+    mainTimesheet.getCell("E13").value = officerData.postTitle;
+    mainTimesheet.getCell("K13").value = officerData.email;
+    mainTimesheet.getCell("E14").value = officerData.commitmentRef;
     if (dayjs(officerData.certifiedOn).isValid()) {
       const certifiedOn = dayjs(officerData.certifiedOn).add(8, "hour").toDate();
-      worksheet.getCell("K14").value = certifiedOn;
-      worksheet.getCell("K14").numFmt = "dd-mmm-yyyy";
+      mainTimesheet.getCell("K14").value = certifiedOn;
+      mainTimesheet.getCell("K14").numFmt = "dd-mmm-yyyy";
     }
+
+    const leaveDaysSheet = workbook.getWorksheet(3);
+
+    // set leave days
+    const leaveDaysArray = Object.values(leaveDays);
+    // sort by date, date may be undefined
+    const leaveDaysArraySorted = leaveDaysArray.sort((a, b) => {
+      if (a.nonChargeDate === undefined) {
+        return 1;
+      }
+      if (b.nonChargeDate === undefined) {
+        return -1;
+      }
+      return dayjs(a.nonChargeDate).diff(dayjs(b.nonChargeDate));
+    });
+    leaveDaysArraySorted.forEach((leaveDay, index) => {
+      const row = index + 2;
+      const date = dayjs(leaveDay.nonChargeDate).add(8, "hour").toDate();
+      leaveDaysSheet.getCell(`A${row}`).value = date;
+      leaveDaysSheet.getCell(`A${row}`).numFmt = "dd-mmm-yyyy";
+      leaveDaysSheet.getCell(`B${row}`).value = leaveDay.nonChargeDays;
+      leaveDaysSheet.getCell(`C${row}`).value = leaveDay.remark;
+    });
 
     await downloadExcel(workbook);
   };
