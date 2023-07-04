@@ -3,6 +3,7 @@ import Grid from "@mui/material/Unstable_Grid2";
 import { DatePicker } from "@mui/x-date-pickers";
 import { useState } from "react";
 import { OfficerData, OfficerState, StaffData, StaffState, useConfigStore } from "./store/configStore";
+import dayjs from "dayjs";
 
 interface StaffDetailCardProps {
   open: boolean;
@@ -129,7 +130,7 @@ const StaffDetailCard = ({ open, setOpen }: StaffDetailCardProps) => {
           </Grid>
           <Grid xs={6} md={3}>
             <DatePicker
-              value={localOfficerData.certifiedOn}
+              value={dayjs(localOfficerData.certifiedOn)}
               label="Certified On"
               format="YYYY-MM-DD"
               slotProps={{
@@ -158,6 +159,7 @@ const StaffDetailCard = ({ open, setOpen }: StaffDetailCardProps) => {
           onClick={() => {
             setStaffData(localStaffData);
             setOfficerData(localOfficerData);
+            setOpen(false);
           }}
         >
           Update

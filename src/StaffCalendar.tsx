@@ -1,42 +1,41 @@
-import { Badge } from "@mui/material";
+import { Badge, Card } from "@mui/material";
 import { PickersDay, PickersDayProps } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { Dayjs } from "dayjs";
+import { LeaveData, useConfigStore } from "./store/configStore";
 
-function CustomDay(props: PickersDayProps<Dayjs> & { highlightedDate?: any[] }) {
+function CustomDay(props: PickersDayProps<Dayjs> & { highlightedDate?: LeaveData[] }) {
   const { highlightedDate = [], day, outsideCurrentMonth, ...other } = props;
 
-  const nonChargeDays = highlightedDate.find((ele) => dayjs(ele.date).isSame(day, "day"))?.nonChargeDays;
-  const badgeContentText = nonChargeDays == 0.5 ? "✈️" : nonChargeDays == 1 ? "🚀" : undefined;
-
+  const nonChargeDays = highlightedDate.find((ele) => dayjs(ele.nonChargeDate).isSame(day, "day"))?.nonChargeDays || 0;
+  const badgeContentText = nonChargeDays == "0.5" ? "✈️" : nonChargeDays == "1" ? "🚀" : undefined;
+  const finalBadgeContent = outsideCurrentMonth ? undefined : badgeContentText;
   return (
-    <Badge key={props.day.toString()} overlap="circular" badgeContent={badgeContentText}>
+    <Badge key={props.day.toString()} overlap="circular" badgeContent={finalBadgeContent}>
       <PickersDay {...other} outsideCurrentMonth={outsideCurrentMonth} day={day} />
     </Badge>
   );
 }
 
 const StaffCalendar = () => {
+  const leaveDays = useConfigStore((state) => state.leaveDays);
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <DateCalendar
-        showDaysOutsideCurrentMonth
-        slots={{
-          day: CustomDay,
-        }}
-        slotProps={{
-          day: {
-            highlightedDate: [
-              { date: dayjs("2023-6-1"), nonChargeDays: 1 },
-              { date: dayjs("2023-7-1"), nonChargeDays: 0.5 },
-              { date: dayjs("2023-7-2"), nonChargeDays: 0.5 },
-              { date: dayjs("2023-7-3"), nonChargeDays: 1 },
-            ],
-          } as any,
-        }}
-      />
+      <Card>
+        <DateCalendar
+          slots={{
+            day: CustomDay,
+          }}
+          slotProps={{
+            day: {
+              highlightedDate: leaveDays,
+            } as any,
+          }}
+        />
+      </Card>
     </LocalizationProvider>
   );
 };

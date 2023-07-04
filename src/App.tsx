@@ -1,21 +1,22 @@
-import { Button, Divider, IconButton, TextField } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Workbook } from "exceljs";
-import { StaffState, useConfigStore } from "./store/configStore";
-import StaffDetailCard from "./StaffDetailCard";
 import styled from "@emotion/styled";
-import { useState } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
+import { Divider, IconButton } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import LeaveDaysGrid from './LeaveDaysGrid';
-import GenerateConfigCard from './GenerateConfigCard';
-import StaffCalendar from './StaffCalendar';
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import { Workbook } from "exceljs";
+import { useState } from "react";
+import GenerateConfigCard from "./GenerateConfigCard";
+import LeaveDaysGrid from "./LeaveDaysGrid";
+import StaffCalendar from "./StaffCalendar";
+import StaffDetailCard from "./StaffDetailCard";
+import { OfficerState, StaffState, useConfigStore } from "./store/configStore";
 
 function App() {
   const [open, setOpen] = useState(false);
-
   const staffData = useConfigStore((state: StaffState) => state.staffData);
+  const officerData = useConfigStore((state: OfficerState) => state.officerData);
 
   const OutterContainer = styled.div`
     height: 100vh;
@@ -49,35 +50,52 @@ function App() {
     justify-content: center;
   `;
 
-  const downloadExcelFile = async () => {
-    fetch("./timesheet_template.xlsx")
-      .then((response) => response.arrayBuffer())
-      .then((buffer) => {
-        // Use exceljs to read the file
-        const workbook = new Workbook();
-        workbook.calcProperties.fullCalcOnLoad = true;
-        return workbook.xlsx.load(buffer);
-      })
-      .then(async (workbook) => {
-        console.log("[workbook ] >", workbook);
-        const worksheet = workbook.getWorksheet("Automated Form - ONLY Modify D9");
+  const getWorkbook = async () => {
+    const response = await fetch("./timesheet_template.xlsx");
+    const arrayBuffer = await response.arrayBuffer();
+    const workbook = new Workbook();
+    workbook.calcProperties.fullCalcOnLoad = true;
+    await workbook.xlsx.load(arrayBuffer);
+    return workbook;
+  };
 
-        // Set the value of cell D9 as a date
-        const dateValue = new Date(Date.UTC(2023, 4, 1));
-        worksheet.getCell("D9").value = dateValue;
-        worksheet.getCell("D9").numFmt = "dd-mmm-yyyy";
+  const onGenerate = async (startDate: Dayjs, remarks: string) => {
+    const workbook = await getWorkbook();
+    const worksheet = workbook.getWorksheet(1);
+    worksheet.getCell("D9").value = startDate.add(8, "hour").toDate();
+    worksheet.getCell("D9").numFmt = "dd-mmm-yyyy";
+    worksheet.getCell("E60").value = remarks;
 
-        const excelFileBuffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([excelFileBuffer], { type: "application/xlsx" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        // make the file name into Timesheet_{current datatime}.xlsx
-        a.download = `Timesheet_${new Date().toLocaleString()}.xlsx`;
+    // set staff data
+    worksheet.getCell("D5").value = staffData.staffName;
+    worksheet.getCell("D6").value = staffData.contractorName;
+    worksheet.getCell("D7").value = staffData.staffCategory;
+    worksheet.getCell("D8").value = staffData.department;
+    worksheet.getCell("L8").value = staffData.postUnit;
 
-        a.click();
-        URL.revokeObjectURL(url);
-      });
+    // set officer data
+    worksheet.getCell("E12").value = officerData.officerName;
+    worksheet.getCell("E13").value = officerData.postTitle;
+    worksheet.getCell("K13").value = officerData.email;
+    worksheet.getCell("E14").value = officerData.commitmentRef;
+    if (dayjs(officerData.certifiedOn).isValid()) {
+      const certifiedOn = dayjs(officerData.certifiedOn).add(8, "hour").toDate();
+      worksheet.getCell("K14").value = certifiedOn;
+      worksheet.getCell("K14").numFmt = "dd-mmm-yyyy";
+    }
+
+    await downloadExcel(workbook);
+  };
+
+  const downloadExcel = async (workbook: Workbook) => {
+    const excelFileBuffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([excelFileBuffer], { type: "application/xlsx" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Timesheet_${new Date().toLocaleString()}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -93,13 +111,13 @@ function App() {
           </HeaderContainer>
           <Divider />
           <Grid container spacing={2} padding={2}>
-          <Grid xs={12} md={12}>
-            <GenerateConfigCard />
+            <Grid xs={12} md={12}>
+              <GenerateConfigCard onGenerate={onGenerate} />
             </Grid>
             <Grid xs>
               <LeaveDaysGrid />
             </Grid>
-            <Grid >
+            <Grid>
               <StaffCalendar />
             </Grid>
           </Grid>
