@@ -1,0 +1,18 @@
+export const ExcelColWidth = [
+  { col: "A", width: 8 },
+  { col: "B", width: 8 },
+  { col: "C", width: 11},
+  { col: "D", width: 17.5 },
+  { col: "E", width: 3.88 },
+  { col: "F", width: 5.5 },
+  { col: "G", width: 9.25 },
+  { col: "H", width: 8 },
+  { col: "I", width: 7.13 },
+  { col: "J", width: 8 },
+  { col: "K", width: 8.25 },
+  { col: "L", width: 8 },
+  { col: "M", width: 8.38 },
+  { col: "N", width: 8 },
+  { col: "O", width: 8.38 },
+  { col: "P", width: 0.31 },
+];
