@@ -5,7 +5,7 @@ steps:
   - name: build-push
     image: plugins/docker
     settings:
-      auto_tag: true
+      tags: latest
       username:
         from_secret: REGISTRY_USERNAME
       password:
