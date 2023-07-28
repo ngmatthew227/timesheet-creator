@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --frozen-lockfile
 COPY . .
-RUN npm build
+RUN npm run build
 
 # Stage 2: Serve the built React application using a lightweight web server
 FROM nginx:alpine
