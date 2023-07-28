@@ -12,7 +12,7 @@ steps:
         from_secret: REGISTRY_PASSWORD
       registry:
         from_secret: REGISTRY_IP
-      repo: timesheet-creator
+      repo: cloud.canister.io:5000/matt406/timesheet-creator
       dockerfile: Dockerfile
   - name: deploy
     image: appleboy/drone-ssh
