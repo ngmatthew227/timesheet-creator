@@ -9,10 +9,4 @@ RUN npm run build
 # Stage 2: Serve the built React application using a lightweight web server
 FROM nginx:alpine
 
-# Remove the default NGINX configuration
-RUN rm -rf /etc/nginx/conf.d/default.conf
-
-# Copy the build output from the previous stage
 COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
