@@ -12,8 +12,7 @@ steps:
         from_secret: REGISTRY_PASSWORD
       registry:
         from_secret: REGISTRY_IP
-      repo:
-        from_secret: REPO
+      repo: timesheet-creator
       dockerfile: Dockerfile
   - name: deploy
     image: appleboy/drone-ssh
@@ -36,9 +35,9 @@ steps:
       envs: [REGISTRY_IP, REGISTRY_USERNAME, REGISTRY_PASSWORD]
       script:
         - sudo docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD $REGISTRY_IP
-        - sudo docker pull cloud.canister.io:5000/matt406/timeshee-creator
+        - sudo docker pull cloud.canister.io:5000/matt406/timesheet-creator
         - sudo docker stop timesheet-creator && sudo docker rm timesheet-creator
-        - sudo docker run --name timesheet-creator -d cloud.canister.io:5000/matt406/timeshee-creator
+        - sudo docker run --name timesheet-creator -d cloud.canister.io:5000/matt406/timesheet-creator
         - echo "Deployed"
     when:
       status:
