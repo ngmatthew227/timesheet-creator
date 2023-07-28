@@ -14,8 +14,5 @@ RUN rm -rf /etc/nginx/conf.d/default.conf
 
 # Copy the build output from the previous stage
 COPY --from=build /app/build /usr/share/nginx/html
-
-# Use a custom NGINX configuration file (if needed)
-# COPY nginx.conf /etc/nginx/conf.d/
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
