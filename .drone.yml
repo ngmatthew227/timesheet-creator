@@ -12,7 +12,7 @@ steps:
         from_secret: REGISTRY_PASSWORD
       registry:
         from_secret: REGISTRY_IP
-      repo: /timesheet-creator
+      repo: timesheet-creator
       dockerfile: Dockerfile
   - name: deploy
     image: appleboy/drone-ssh
