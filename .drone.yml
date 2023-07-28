@@ -1,0 +1,52 @@
+kind: pipeline
+type: docker
+name: build
+steps:
+  - name: build-push
+    image: plugins/docker
+    settings:
+      auto_tag: true
+      username:
+        from_secret: REGISTRY_USERNAME
+      password:
+        from_secret: REGISTRY_PASSWORD
+      registry:
+        from_secret: REGISTRY_IP
+      repo:
+        from_secret: REPO
+      dockerfile: Dockerfile
+  - name: deploy
+    image: appleboy/drone-ssh
+    environment:
+      REGISTRY_USERNAME:
+        from_secret: REGISTRY_USERNAME
+      REGISTRY_PASSWORD:
+        from_secret: REGISTRY_PASSWORD
+      REGISTRY_IP:
+        from_secret: REGISTRY_IP
+    settings:
+      host:
+        from_secret: VPS_IP
+      username:
+        from_secret: VPS_USERNAME
+      password:
+        from_secret: VPS_PASSWORD
+      port: 22
+      command_timeout: 2m
+      envs: [REGISTRY_IP, REGISTRY_USERNAME, REGISTRY_PASSWORD]
+      script:
+        - sudo docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD $REGISTRY_IP
+        - sudo docker pull cloud.canister.io:5000/matt406/timeshee-creator
+        - sudo docker stop timesheet-creator && sudo docker rm timesheet-creator
+        - sudo docker run --name timesheet-creator -d cloud.canister.io:5000/matt406/timeshee-creator
+        - echo "Deployed"
+    when:
+      status:
+        - success
+
+image_pull_secrets:
+  - REGISTRY_TOKEN
+
+trigger:
+  branch:
+    - main
