@@ -37,7 +37,7 @@ steps:
         - sudo docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD $REGISTRY_IP
         - sudo docker pull cloud.canister.io:5000/matt406/timesheet-creator
         - sudo docker stop timesheet-creator && sudo docker rm timesheet-creator
-        - sudo docker run --name timesheet-creator -d cloud.canister.io:5000/matt406/timesheet-creator
+        - sudo docker run --network nginx-manager_default --name timesheet-creator -d cloud.canister.io:5000/matt406/timesheet-creator
         - echo "Deployed"
     when:
       status:
