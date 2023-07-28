@@ -73,7 +73,7 @@ function App() {
     mainSheet.getCell("D6").value = staffData.contractorName;
     mainSheet.getCell("D7").value = staffData.staffCategory;
     mainSheet.getCell("D8").value = staffData.department;
-    mainSheet.getCell("L8").value = staffData.postUnit;
+    mainSheet.getCell("L8").value = staffData.postUnit; 
 
     // set officer data
     mainSheet.getCell("E12").value = officerData.officerName;
